@@ -1,0 +1,137 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    name: Windows (MSVC, Qt 6.12.0)
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.12.0"
+          arch: win64_msvc2022_64
+          cache: true
+
+      # Same entry point as a developer on Windows: configure, build, ctest,
+      # windeployqt and the dist zip. The script fails the step if ctest fails.
+      - name: Build, test, deploy, package
+        shell: pwsh
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows.ps1 `
+            -QtDir $env:QT_ROOT_DIR -Deploy -Zip
+
+      - name: Headless render (1920x1080)
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          $data = Join-Path $env:RUNNER_TEMP "dhw-data"
+          New-Item -ItemType Directory -Force -Path $data | Out-Null
+          Copy-Item "fixtures\demo\data.json" (Join-Path $data "data.json") -Force
+          New-Item -ItemType Directory -Force -Path "build\verify" | Out-Null
+          & "build\apps\qt\Release\DaHoWork.exe" --data-dir $data --date 2026-10-12 `
+            --render "build\verify\render-1920x1080.png"
+          if ($LASTEXITCODE -ne 0) { throw "render exited with code $LASTEXITCODE" }
+          $path = "build\verify\render-1920x1080.png"
+          if (-not (Test-Path $path)) { throw "render output is missing" }
+          $bytes = [System.IO.File]::ReadAllBytes($path)
+          $width = ([int]($bytes[16]) -shl 24) -bor ([int]($bytes[17]) -shl 16) -bor `
+                   ([int]($bytes[18]) -shl 8) -bor [int]($bytes[19])
+          $height = ([int]($bytes[20]) -shl 24) -bor ([int]($bytes[21]) -shl 16) -bor `
+                    ([int]($bytes[22]) -shl 8) -bor [int]($bytes[23])
+          Write-Host "render: ${width}x${height}"
+          if ($width -ne 1920 -or $height -ne 1080) {
+            throw "render is ${width}x${height}, expected 1920x1080"
+          }
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: DaHoWork-win64
+          path: |
+            dist/DaHoWork-win64.zip
+            build/verify/render-1920x1080.png
+          if-no-files-found: error
+
+  macos:
+    name: macOS (Clang, Qt 6.12.0)
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.12.0"
+          cache: true
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
+
+      - name: Build
+        run: cmake --build build --parallel "$(sysctl -n hw.ncpu)"
+
+      - name: Unit tests
+        run: ctest --test-dir build --output-on-failure
+
+      # The shell and the CLI must rasterise the same layout module to identical
+      # pixels; this is the invariant scripts/verify-macos.sh guards locally.
+      - name: Headless export consistency
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/dhw-data"
+          mkdir -p "$work"
+          cp fixtures/demo/data.json "$work/data.json"
+          build/tools/dhw_render_cli --data "$work/data.json" --date 2026-10-12 \
+            --out "$RUNNER_TEMP/cli.png"
+          build/apps/qt/DaHoWork --data-dir "$work" --date 2026-10-12 \
+            --render "$RUNNER_TEMP/app.png"
+          cli_hash="$(shasum -a 256 "$RUNNER_TEMP/cli.png" | cut -d' ' -f1)"
+          app_hash="$(shasum -a 256 "$RUNNER_TEMP/app.png" | cut -d' ' -f1)"
+          echo "cli=$cli_hash"
+          echo "app=$app_hash"
+          if [ "$cli_hash" != "$app_hash" ]; then
+            echo "::error::CLI and shell exports are not byte identical"
+            exit 1
+          fi
+          cp "$RUNNER_TEMP/app.png" render-1920x1080.png
+
+      - name: Package
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          tar -czf dist/DaHoWork-macos-build.tar.gz \
+            -C build apps/qt/DaHoWork tools/dhw_render_cli tests/dhw_tests
+          mv render-1920x1080.png dist/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: DaHoWork-macos
+          path: |
+            dist/DaHoWork-macos-build.tar.gz
+            dist/render-1920x1080.png
+          if-no-files-found: error
