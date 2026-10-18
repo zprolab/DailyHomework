@@ -1,5 +1,9 @@
 * text=auto
 *.ps1 text eol=crlf
 *.sh text eol=lf
+# The tests compare canonical JSON byte-for-byte and the serializer always emits
+# LF. Without this, a Windows checkout with core.autocrlf turns the fixture into
+# CRLF and store_test's canonical checks fail (seen on GitHub Actions windows-latest).
+*.json text eol=lf
 *.ico binary
 *.png binary
