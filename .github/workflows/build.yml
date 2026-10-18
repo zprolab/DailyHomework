@@ -166,9 +166,12 @@ jobs:
       - name: Package
         run: |
           set -euo pipefail
-          mkdir -p dist
-          tar -czf dist/DaHoWork-macos-build.tar.gz \
-            -C build apps/qt/DaHoWork tools/dhw_render_cli tests/dhw_tests
+          mkdir -p dist/DaHoWork-macos
+          cp build/apps/qt/DaHoWork build/tools/dhw_render_cli build/tests/dhw_tests \
+            dist/DaHoWork-macos/
+          cp LICENSE THIRD_PARTY_NOTICES.md dist/DaHoWork-macos/
+          cp -R LICENSES dist/DaHoWork-macos/
+          tar -czf dist/DaHoWork-macos-build.tar.gz -C dist DaHoWork-macos
           mv render-1920x1080.png dist/
 
       - name: Upload artifacts

@@ -375,6 +375,15 @@ if ($Deploy) {
     }
     $cli = Join-Path $toolsDir "dhw_render_cli.exe"
     if (Test-Path $cli) { Copy-Item $cli $appDir -Force }
+    # LGPLv3 (Qt) and MIT/OFL notices have to travel with the binaries.
+    foreach ($name in @("LICENSE", "THIRD_PARTY_NOTICES.md")) {
+        $source = Join-Path $root $name
+        if (Test-Path $source) { Copy-Item $source (Join-Path $appDir $name) -Force }
+    }
+    $licenseDir = Join-Path $root "LICENSES"
+    if (Test-Path $licenseDir) {
+        Copy-Item $licenseDir (Join-Path $appDir "LICENSES") -Recurse -Force
+    }
     Write-Host "Copy the whole $appDir folder to the classroom machine; the data folder is created next to the exe."
 
     if ($Zip) {

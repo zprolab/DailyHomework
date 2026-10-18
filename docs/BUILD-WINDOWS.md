@@ -188,6 +188,11 @@ DaHoWork-win64.zip
 教室机首次启动时在 exe 同级自动创建 `data\`。静态 Qt 构建同样支持 `-Zip`，
 此时包里只有 `DaHoWork.exe` 和 `dhw_render_cli.exe`。
 
+> **许可提醒（2026-10-18）**：Qt 6 以 LGPLv3 提供。默认的 `-Deploy` 动态分发只需随包携带
+> `LICENSE`、`THIRD_PARTY_NOTICES.md`、`LICENSES/` 并允许替换 Qt 库（脚本已自动复制）；
+> `-StaticQt` 的单文件 exe 无法让用户替换 Qt，LGPLv3 要求同时提供可重链接的应用目标文件/构建
+> 脚本，或改用 Qt 商业许可。对外分发静态包前请先确认；内部自用请自行评估。
+
 ## 形态二：静态 Qt，单文件 exe（零依赖，双击即跑）
 
 适合「不能装任何运行库、只能拷一个 exe」的教室机。需要在本机先准备一份静态 Qt

@@ -91,6 +91,14 @@ build/tools/dhw_render_cli --dump-style style.json     # 导出全部可调项
 DrawCmd、领域规则（上学日 / 今天 / 建议 / 公告）、持久化（备份 / 恢复 / 迁移 / 图片归档）、
 排版不变量（不越界、不叠字、编号规则、截断、层级）。
 
+## 许可证
+
+- 本仓库自己的代码：MIT（见 `LICENSE`）。
+- Qt 6（Core / Gui / Widgets）：LGPLv3，构建产物动态链接官方共享库；静态单文件发布需要同时满足
+  LGPLv3 的可重链接义务，或改用 Qt 商业许可。
+- vendored Fluent-Qt：MIT；其字体/图标资源为 OFL-1.1 / MIT。
+- 第三方许可证全文与分发注意事项：[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)、`LICENSES/`。
+
 ## 当前状态
 
 已完成：核心领域层、排版引擎、Qt 渲染层、无头出图工具、macOS 与 Windows 构建脚本、
