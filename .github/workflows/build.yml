@@ -51,7 +51,8 @@ jobs:
         shell: pwsh
         run: |
           powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows.ps1 `
-            -QtDir $env:QT_ROOT_DIR -Generator Ninja -Deploy -Zip
+            -QtDir $env:QT_ROOT_DIR -Generator Ninja `
+            -Jobs $([Environment]::ProcessorCount) -Deploy -Zip
 
       - name: Headless render (1920x1080)
         shell: pwsh

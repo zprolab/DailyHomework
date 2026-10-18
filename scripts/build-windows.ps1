@@ -24,11 +24,15 @@
 
     -Fluent builds the WinUI3/Fluent shell (vendored Fluent-Qt, -DDHW_UI_FLUENT=ON).
     Without it the native Qt style shell is built (-DDHW_UI_FLUENT=OFF).
+
+    -Jobs sets the parallel compile job count (default: CPU count); it is passed
+    to cmake --build --parallel so the log shows the real -j value.
 #>
 param(
     [string]$QtDir = "",
     [string]$BuildDir = "build",
     [string]$Config = "Release",
+    [int]$Jobs = 0,
     [string]$Generator = "",
     [switch]$StaticQt,
     [switch]$SkipTests,
@@ -41,6 +45,10 @@ param(
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
+
+if ($Jobs -le 0) {
+    $Jobs = [Environment]::ProcessorCount
+}
 
 if ($Zip -and -not $Deploy) {
     throw "-Zip requires -Deploy: the archive is made from the deployed folder."
@@ -242,6 +250,7 @@ Write-Host ("visual studio installed: {0}" -f $(if ($installedMajors.Count -gt 0
 Write-Host "Qt: $QtDir"
 Write-Host ("generator: {0}{1}" -f $generatorName, $(if ($isVisualStudio) { " (x64)" } else { "" }))
 Write-Host "build dir: $BuildDir ($Config)"
+Write-Host ("parallel jobs: {0} (cmake --build --parallel {0})" -f $Jobs)
 Write-Host ("options: Deploy={0} Zip={1} StaticQt={2} Force={3} SkipTests={4} Fluent={5}" -f $Deploy, $Zip, $StaticQt, $Force, $SkipTests, $Fluent)
 
 $qtLinkMode = Get-QtKitLinkMode $QtDir
@@ -299,7 +308,7 @@ if ($Fluent) {
 cmake @configArgs
 if ($LASTEXITCODE -ne 0) { throw "cmake configure failed with exit code $LASTEXITCODE" }
 
-cmake --build $BuildDir --config $Config --parallel
+cmake --build $BuildDir --config $Config --parallel $Jobs
 if ($LASTEXITCODE -ne 0) { throw "build failed with exit code $LASTEXITCODE" }
 
 $testFailed = $false
