@@ -1,5 +1,7 @@
 #include <QApplication>
 #include <QColor>
+#include <QGuiApplication>
+#include <QScreen>
 #include <QDir>
 #include <QImage>
 #include <QPalette>
@@ -10,6 +12,7 @@
 #include <QStringList>
 #include <QTimer>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 
@@ -27,6 +30,7 @@ namespace {
 struct Options {
     std::string data_dir;
     std::string render_path;
+    double render_scale = 1.0;
     std::string screenshot_path;
     std::string date;
     std::string window_size;
@@ -51,6 +55,12 @@ Options parse_options(int argc, char** argv) {
         };
         if (flag == "--render") {
             value(options.render_path);
+        } else if (flag == "--render-scale") {
+            std::string text;
+            if (i + 1 < argc) {
+                text = argv[++i];
+                options.render_scale = std::strtod(text.c_str(), nullptr);
+            }
         } else if (flag == "--screenshot") {
             value(options.screenshot_path);
         } else if (flag == "--date") {
@@ -97,6 +107,10 @@ QString to_qstring(const std::string& text) {
 }  // namespace
 
 int main(int argc, char** argv) {
+    // Keep true fractional scaling on 125%/150% Windows displays: rounding to an
+    // integer factor would blur every text run and vector icon on that panel.
+    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(
+        Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
     QApplication app(argc, argv);
     const Options options = parse_options(argc, argv);
 
@@ -111,6 +125,10 @@ int main(int argc, char** argv) {
         std::printf("\nplatform chain picks: %s\n",
                     dhw::qt::preferred_style_key().toUtf8().constData());
         std::printf("selected style: %s\n", selected.toUtf8().constData());
+        if (const QScreen* screen = QGuiApplication::primaryScreen()) {
+            std::printf("screen: %dx%d dpr=%.2f\n", screen->geometry().width(),
+                        screen->geometry().height(), screen->devicePixelRatio());
+        }
         // Read only palette probe: what the platform style hands the shell.
         const QPalette palette = app.palette();
         const auto role = [&palette](QPalette::ColorRole value) {
@@ -149,12 +167,14 @@ int main(int argc, char** argv) {
     }
 
     if (!options.render_path.empty()) {
-        const QImage image = controller.render_current_png();
+        const double ratio = options.render_scale > 0.0 ? options.render_scale : 1.0;
+        const QImage image = controller.render_current_png(ratio);
         if (!image.save(to_qstring(options.render_path), "PNG")) {
             std::fprintf(stderr, "cannot write %s\n", options.render_path.c_str());
             return 1;
         }
-        std::printf("wrote %s\n", options.render_path.c_str());
+        std::printf("wrote %s (%dx%d)\n", options.render_path.c_str(), image.width(),
+                    image.height());
         return 0;
     }
 

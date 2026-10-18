@@ -336,7 +336,7 @@ QString AppController::image_path_for(const QString& page_date) const {
     return QDir(executable_dir_path()).filePath(to_qstring(image_file_name(from_qstring(page_date))));
 }
 
-QImage AppController::render_current_png() const {
+QImage AppController::render_current_png(double pixel_ratio) const {
     const QtTextMetrics metrics;
     const ViewModel view = view_model();
     std::vector<QImage> images;
@@ -350,10 +350,11 @@ QImage AppController::render_current_png() const {
     }
     const LayoutResult result = layout_presentation(view, metrics, options);
     return render_commands(result.commands, static_cast<int>(layout_geometry::kWidth),
-                           static_cast<int>(layout_geometry::kHeight), images, metrics);
+                           static_cast<int>(layout_geometry::kHeight), images, metrics,
+                           pixel_ratio);
 }
 
-QImage AppController::render_today_png() const {
+QImage AppController::render_today_png(double pixel_ratio) const {
     const QtTextMetrics metrics;
     const ViewModel view = build_view_model(data_, effective_today(), false);
     std::vector<QImage> images;
@@ -367,7 +368,8 @@ QImage AppController::render_today_png() const {
     }
     const LayoutResult result = layout_presentation(view, metrics, options);
     return render_commands(result.commands, static_cast<int>(layout_geometry::kWidth),
-                           static_cast<int>(layout_geometry::kHeight), images, metrics);
+                           static_cast<int>(layout_geometry::kHeight), images, metrics,
+                           pixel_ratio);
 }
 
 QString AppController::export_current_png() {

@@ -74,9 +74,11 @@ public:
     void redo();
 
     // --- images ----------------------------------------------------------
-    // 1920x1080 PNG of the page day in the current mode (manual export).
-    QImage render_current_png() const;
-    QImage render_today_png() const;
+    // 1920x1080 * pixel_ratio PNG of the page day in the current mode (manual export).
+    // A ratio above 1 renders the same vector layout at physical device resolution,
+    // which is what the presentation window uses on Retina / 4K screens.
+    QImage render_current_png(double pixel_ratio = 1.0) const;
+    QImage render_today_png(double pixel_ratio = 1.0) const;
     QString image_path_for(const QString& page_date) const;
     // Writes the manual export next to the executable and returns its path.
     QString export_current_png();

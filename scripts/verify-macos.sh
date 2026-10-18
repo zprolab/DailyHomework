@@ -84,6 +84,24 @@ else
     exit 1
 fi
 
+echo "== headless export: high-DPI (2x) =="
+# The same layout must also rasterise identically at a non-1x pixel ratio; this is
+# the path used by the presentation window on Retina / 4K screens.
+QT_QPA_PLATFORM=offscreen "${BUILD_DIR}/tools/dhw_render_cli" --data "${WORK}/data/data.json" \
+    --date 2026-10-12 --scale 2 --out "${WORK}/cli2.png"
+QT_QPA_PLATFORM=offscreen "${APP}" --data-dir "${WORK}/data" --date 2026-10-12 \
+    --render-scale 2 --render "${WORK}/app2.png"
+CLI2_HASH="$(shasum -a 256 "${WORK}/cli2.png" | cut -d' ' -f1)"
+APP2_HASH="$(shasum -a 256 "${WORK}/app2.png" | cut -d' ' -f1)"
+if [ "${CLI2_HASH}" = "${APP2_HASH}" ]; then
+    echo "ok: 2x CLI and shell export are byte identical (${CLI2_HASH:0:16}...)"
+else
+    echo "FAIL: 2x CLI and shell export differ" >&2
+    echo "  cli: ${CLI2_HASH}" >&2
+    echo "  app: ${APP2_HASH}" >&2
+    exit 1
+fi
+
 echo
 echo "All checks passed. Artifacts:"
 echo "  ${APP}"

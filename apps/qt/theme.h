@@ -77,8 +77,12 @@ QColor accent_color();       // QPalette::Highlight, lifted when it is unreadabl
 QColor soft_accent_color();  // accent blended into Base (today's column)
 QColor danger_color();       // the one semantic colour no palette role covers
 
-QPixmap theme_icon(const QString& role, int size, const QColor& color);
-QPixmap card_icon(dhw::icons::Icon icon, int size, const QString& color);
+// `device_pixel_ratio` 0 means "use the primary screen", so call sites that do not
+// know their window still get a Retina/150%-scaled pixmap instead of an upscaled one.
+QPixmap theme_icon(const QString& role, int size, const QColor& color,
+                   qreal device_pixel_ratio = 0.0);
+QPixmap card_icon(dhw::icons::Icon icon, int size, const QString& color,
+                  qreal device_pixel_ratio = 0.0);
 
 // QLabel for informational text (card hints, row help). The native font is wider
 // than the old hand sized one, so a long sentence would otherwise push the whole page

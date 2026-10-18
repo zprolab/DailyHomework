@@ -99,6 +99,24 @@ jobs:
           if ($width -ne 1920 -or $height -ne 1080) {
             throw "render is ${width}x${height}, expected 1920x1080"
           }
+          # High-DPI path: the presentation window re-renders the vector layout at the
+          # screen's physical resolution instead of upscaling the 1080p bitmap.
+          $render4k = "build\verify\render-3840x2160.png"
+          $process4k = Start-Process -FilePath $exe -Wait -PassThru `
+            -ArgumentList @("--data-dir", $data, "--date", "2026-10-12",
+                            "--render-scale", "2", "--render", $render4k)
+          if ($process4k.ExitCode -ne 0) {
+            throw "2x render exited with code $($process4k.ExitCode)"
+          }
+          $bytes4k = [System.IO.File]::ReadAllBytes($render4k)
+          $width4k = ([int]($bytes4k[16]) -shl 24) -bor ([int]($bytes4k[17]) -shl 16) -bor `
+                     ([int]($bytes4k[18]) -shl 8) -bor [int]($bytes4k[19])
+          $height4k = ([int]($bytes4k[20]) -shl 24) -bor ([int]($bytes4k[21]) -shl 16) -bor `
+                      ([int]($bytes4k[22]) -shl 8) -bor [int]($bytes4k[23])
+          Write-Host "2x render: ${width4k}x${height4k}"
+          if ($width4k -ne 3840 -or $height4k -ne 2160) {
+            throw "2x render is ${width4k}x${height4k}, expected 3840x2160"
+          }
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -107,6 +125,7 @@ jobs:
           path: |
             dist/DaHoWork-win64.zip
             build/verify/render-1920x1080.png
+            build/verify/render-3840x2160.png
           if-no-files-found: error
 
   macos:
@@ -162,6 +181,20 @@ jobs:
             exit 1
           fi
           cp "$RUNNER_TEMP/app.png" render-1920x1080.png
+          # High-DPI path: same layout, 2x physical pixel ratio.
+          build/tools/dhw_render_cli --data "$work/data.json" --date 2026-10-12 \
+            --scale 2 --out "$RUNNER_TEMP/cli2.png"
+          build/apps/qt/DaHoWork --data-dir "$work" --date 2026-10-12 \
+            --render-scale 2 --render "$RUNNER_TEMP/app2.png"
+          cli2_hash="$(shasum -a 256 "$RUNNER_TEMP/cli2.png" | cut -d' ' -f1)"
+          app2_hash="$(shasum -a 256 "$RUNNER_TEMP/app2.png" | cut -d' ' -f1)"
+          echo "2x cli=$cli2_hash"
+          echo "2x app=$app2_hash"
+          if [ "$cli2_hash" != "$app2_hash" ]; then
+            echo "::error::CLI and shell 2x exports are not byte identical"
+            exit 1
+          fi
+          cp "$RUNNER_TEMP/app2.png" render-3840x2160.png
 
       - name: Package
         run: |
@@ -172,7 +205,7 @@ jobs:
           cp LICENSE THIRD_PARTY_NOTICES.md dist/DaHoWork-macos/
           cp -R LICENSES dist/DaHoWork-macos/
           tar -czf dist/DaHoWork-macos-build.tar.gz -C dist DaHoWork-macos
-          mv render-1920x1080.png dist/
+          mv render-1920x1080.png render-3840x2160.png dist/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -181,4 +214,5 @@ jobs:
           path: |
             dist/DaHoWork-macos-build.tar.gz
             dist/render-1920x1080.png
+            dist/render-3840x2160.png
           if-no-files-found: error

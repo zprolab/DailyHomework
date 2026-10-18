@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QImage>
 #include <QPoint>
 #include <QWidget>
 
@@ -12,9 +13,10 @@ class QTimer;
 
 namespace dhw::qt {
 
-// Frameless full screen presentation: the shared 1920x1080 PNG scaled with
-// letterboxing, hidden mouse pointer, and a context menu that folds itself away
-// after six idle seconds.
+// Frameless full screen presentation: the shared 1920x1080 layout re-rendered at the
+// screen's physical resolution (not an upscaled 1080p bitmap) with letterboxing, a
+// hidden mouse pointer, and a context menu that folds itself away after six idle
+// seconds.
 class PresentWindow : public QWidget {
     Q_OBJECT
 
@@ -47,6 +49,12 @@ private:
     QTimer* idle_ = nullptr;
     QTimer* cursor_ = nullptr;
     bool menu_open_ = false;
+    // Last frame, keyed by the device pixel ratio it was rendered for. The trace
+    // content changes only through controller signals, so a repaint during the menu
+    // animation does not need to rasterise a 4K/5K canvas again.
+    QImage frame_;
+    double frame_ratio_ = 0.0;
+    bool frame_valid_ = false;
 };
 
 }  // namespace dhw::qt

@@ -9,6 +9,7 @@
 #include <QOperatingSystemVersion>
 #include <QPainter>
 #include <QPalette>
+#include <QScreen>
 #include <QStyle>
 #include <QStyleFactory>
 #include <QStyleHints>
@@ -28,6 +29,19 @@ namespace {
 
 constexpr double kUiScaleMin = 0.5;
 constexpr double kUiScaleMax = 1.5;
+
+// The shell draws its own vector glyphs into a pixmap; on a Retina / 150%-scaled
+// screen a 18x18 pixmap is then upscaled and looks soft. Render at the device pixel
+// ratio and hand Qt a pixmap whose logical size is still 18x18.
+qreal effective_dpr(qreal requested) {
+    if (requested > 0.0) {
+        return requested;
+    }
+    if (const QScreen* screen = QGuiApplication::primaryScreen()) {
+        return std::max<qreal>(1.0, screen->devicePixelRatio());
+    }
+    return 1.0;
+}
 
 // The app font captured the first time the UI scale is applied, i.e. the startup
 // system font. Every later call scales this capture and never the previous result,
@@ -335,14 +349,17 @@ QColor danger_color() {
     return dark_appearance() ? QColor(0xE5, 0x73, 0x7A) : QColor(0xC0, 0x27, 0x2D);
 }
 
-QPixmap theme_icon(const QString& role, int size, const QColor& color) {
-    QPixmap pixmap(size, size);
+QPixmap theme_icon(const QString& role, int size, const QColor& color,
+                   qreal device_pixel_ratio) {
+    const qreal dpr = effective_dpr(device_pixel_ratio);
+    const int physical = std::max(1, static_cast<int>(std::lround(size * dpr)));
+    QPixmap pixmap(physical, physical);
     pixmap.fill(Qt::transparent);
     QPainter painter(&pixmap);
     painter.setRenderHint(QPainter::Antialiasing, true);
-    painter.setPen(QPen(color, std::max(1.5, size / 9.0)));
+    painter.setPen(QPen(color, std::max(1.5 * dpr, physical / 9.0)));
     painter.setBrush(Qt::NoBrush);
-    const double s = static_cast<double>(size);
+    const double s = static_cast<double>(physical);
     if (role == QStringLiteral("hamburger")) {
         for (int i = 0; i < 3; ++i) {
             const double y = s * (0.26 + 0.24 * i);
@@ -409,21 +426,31 @@ QPixmap theme_icon(const QString& role, int size, const QColor& color) {
         const QStyle::StandardPixmap standard = icon_for_role(role);
         if (standard != QStyle::SP_CustomBase && QApplication::style() != nullptr) {
             painter.end();
-            return QApplication::style()->standardIcon(standard).pixmap(size, size);
+            QPixmap standard_pixmap =
+                QApplication::style()->standardIcon(standard).pixmap(physical, physical);
+            standard_pixmap.setDevicePixelRatio(dpr);
+            return standard_pixmap;
         }
         // Neither a vector nor a standard icon is known for this role: hand back a null
         // pixmap so the button stays text only instead of reserving space for a blank.
         return QPixmap();
     }
+    pixmap.setDevicePixelRatio(dpr);
     return pixmap;
 }
 
-QPixmap card_icon(dhw::icons::Icon icon, int size, const QString& color) {
+QPixmap card_icon(dhw::icons::Icon icon, int size, const QString& color,
+                  qreal device_pixel_ratio) {
+    const qreal dpr = effective_dpr(device_pixel_ratio);
     const QtTextMetrics metrics;
     const std::vector<DrawCmd> commands =
         dhw::icons::draw(icon, 0.0, 0.0, static_cast<double>(size),
                          static_cast<dhw::Color>(QColor(color).rgba()));
-    return QPixmap::fromImage(render_commands(commands, size, size, {}, metrics));
+    QImage image = render_commands(commands, size, size, {}, metrics, dpr);
+    image.setDevicePixelRatio(dpr);
+    QPixmap pixmap = QPixmap::fromImage(image);
+    pixmap.setDevicePixelRatio(dpr);
+    return pixmap;
 }
 
 InfoLabel::InfoLabel(const QString& text, QWidget* parent) : QLabel(text, parent) {}

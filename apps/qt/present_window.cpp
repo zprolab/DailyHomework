@@ -36,6 +36,9 @@ PresentWindow::PresentWindow(AppController* controller, QWidget* parent)
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
     setCursor(Qt::BlankCursor);
+    // The window paints every pixel itself; skipping Qt's background erase avoids a
+    // full 4K/5K clear before each frame.
+    setAttribute(Qt::WA_OpaquePaintEvent, true);
 
     menu_ = new QMenu(this);
     idle_ = new QTimer(this);
@@ -49,6 +52,7 @@ PresentWindow::PresentWindow(AppController* controller, QWidget* parent)
     connect(cursor_, &QTimer::timeout, this, &PresentWindow::update_cursor);
 
     connect(controller_, &AppController::changed, this, [this]() {
+        frame_valid_ = false;
         if (menu_open_) {
             rebuild_menu();
         }
@@ -77,18 +81,35 @@ void PresentWindow::paintEvent(QPaintEvent* event) {
     Q_UNUSED(event);
     QPainter painter(this);
     painter.fillRect(rect(), Qt::black);
-    const QImage image = controller_->render_current_png();
-    if (image.isNull()) {
+    if (width() <= 0 || height() <= 0) {
         return;
     }
-    const double scale =
-        std::min(width() / kDesignWidth, height() / kDesignHeight);
+    // Fit the 16:9 design canvas into the window with letterboxing, then express the
+    // target rectangle in physical pixels. Rendering the vector DrawCmd list at that
+    // pixel ratio keeps text and hairlines sharp on Retina (2x) and 4K/5K screens;
+    // drawing the 1920x1080 bitmap would blur them.
+    const double scale = std::min(width() / kDesignWidth, height() / kDesignHeight);
+    if (!(scale > 0.0)) {
+        return;
+    }
     const double target_width = kDesignWidth * scale;
     const double target_height = kDesignHeight * scale;
-    painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
-    painter.drawImage(QRectF((width() - target_width) / 2.0, (height() - target_height) / 2.0,
-                             target_width, target_height),
-                      image);
+    const QRectF target((width() - target_width) / 2.0, (height() - target_height) / 2.0,
+                        target_width, target_height);
+    const qreal dpr = devicePixelRatioF();
+    const double ratio = std::max(0.25, (target_width * dpr) / kDesignWidth);
+    if (!frame_valid_ || std::abs(ratio - frame_ratio_) > 0.001) {
+        frame_ = controller_->render_current_png(ratio);
+        frame_ratio_ = ratio;
+        frame_valid_ = !frame_.isNull();
+    }
+    if (frame_.isNull()) {
+        return;
+    }
+    // Logical size of the frame is 1920*ratio/dpr == target_width, so this is an
+    // exact one-to-one blit rather than a resample.
+    frame_.setDevicePixelRatio(dpr);
+    painter.drawImage(target.topLeft(), frame_);
 }
 
 void PresentWindow::contextMenuEvent(QContextMenuEvent* event) {

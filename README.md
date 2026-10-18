@@ -52,6 +52,15 @@ build/tools/dhw_render_cli --data fixtures/demo/data.json --date 2026-10-12 --ou
 build/tools/dhw_render_cli --dump-style style.json     # 导出全部可调项
 ```
 
+## 高分辨率屏幕
+
+- 控件矢量图标按屏幕 `devicePixelRatio` 栅格化（Retina / 150% 缩放不再是放大 18px 位图）；
+  电影放映窗把同一份 `DrawCmd` 版式按屏幕物理分辨率重新渲染，而不是把 1920×1080 位图放大。
+- Windows 的 125%/150% 缩放使用 Qt 的 PassThrough 分数缩放；`ui_scale` 仍然只负责界面的
+  额外字号/间距缩放，两者互不叠加。
+- 高分辨率导出：`DaHoWork --render out.png --render-scale 2` 得到 3840×2160；CLI 对应
+  `--scale 2`，同一输入下两者逐字节一致（`scripts/verify-macos.sh` 会同时校验 1x/2x）。
+
 ## 数据与兼容
 
 - **全新安装是空数据**：不内置课表、公告、作业或任何示例数据；第一次运行就是一张空表，
