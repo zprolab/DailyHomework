@@ -1,0 +1,314 @@
+{
+  "version": 1,
+  "weekly_schedule": [
+    [
+      "语文",
+      "数学",
+      "历史",
+      "物理",
+      "地理",
+      "体育",
+      "美术",
+      "英语",
+      "班会"
+    ],
+    [
+      "数学",
+      "物理",
+      "英语",
+      "英语",
+      "语文",
+      "自习",
+      "信息",
+      "政治",
+      "体育"
+    ],
+    [
+      "数学",
+      "语文",
+      "劳技",
+      "英语",
+      "英语",
+      "心理",
+      "数学",
+      "历史",
+      "生物"
+    ],
+    [
+      "政治",
+      "生物",
+      "数学",
+      "语文",
+      "语文",
+      "英语",
+      "英语",
+      "物理",
+      "体育"
+    ],
+    [
+      "语文",
+      "英语",
+      "英语",
+      "数学",
+      "体育",
+      "信息",
+      "物理",
+      "地理",
+      "音乐"
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  ],
+  "days": {
+    "2026-10-09": {
+      "schedule_override": [
+        null,
+        "体育",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "homework": [
+        {
+          "subject": "语文",
+          "text": "背诵《岳阳楼记》全文，明天课上抽查",
+          "submit_next": false
+        },
+        {
+          "subject": "语文",
+          "text": "随笔一篇（不少于 600 字）",
+          "submit_next": false
+        },
+        {
+          "subject": "语文",
+          "text": "默写第五单元古诗词并自查",
+          "submit_next": true
+        },
+        {
+          "subject": "语文",
+          "text": "读书笔记：选读一篇散文写 300 字感想",
+          "submit_next": false
+        },
+        {
+          "subject": "数学",
+          "text": "练习册 P32–P35 全部完成",
+          "submit_next": false
+        },
+        {
+          "subject": "数学",
+          "text": "错题本订正，每道题写清错因",
+          "submit_next": true
+        },
+        {
+          "subject": "数学",
+          "text": "预习 3.2 节并做完课后练习 1–5 题",
+          "submit_next": false
+        },
+        {
+          "subject": "数学",
+          "text": "试卷错题重做一遍，标注知识点",
+          "submit_next": false
+        },
+        {
+          "subject": "英语A",
+          "text": "Unit 3 词汇抄写两遍并默写",
+          "submit_next": true
+        },
+        {
+          "subject": "英语A",
+          "text": "听力练习 Unit 3，跟读三遍",
+          "submit_next": false
+        },
+        {
+          "subject": "英语A",
+          "text": "语法专项：定语从句练习 1–20 题",
+          "submit_next": false
+        },
+        {
+          "subject": "英语A",
+          "text": "订正上周听写错误并抄写五遍",
+          "submit_next": true
+        },
+        {
+          "subject": "英语B",
+          "text": "背诵课文第二段并录音",
+          "submit_next": false
+        },
+        {
+          "subject": "英语B",
+          "text": "作文 My Weekend（不少于 80 词）",
+          "submit_next": false
+        },
+        {
+          "subject": "英语B",
+          "text": "阅读短文两篇，划出生词并查注释",
+          "submit_next": true
+        },
+        {
+          "subject": "英语B",
+          "text": "完成练习册 Unit 3 的 Reading 部分",
+          "submit_next": false
+        },
+        {
+          "subject": "物理",
+          "text": "实验报告：测量小灯泡的电阻",
+          "submit_next": false
+        },
+        {
+          "subject": "物理",
+          "text": "课后习题 2.1–2.8",
+          "submit_next": true
+        },
+        {
+          "subject": "物理",
+          "text": "整理本章公式与单位换算表",
+          "submit_next": false
+        },
+        {
+          "subject": "物理",
+          "text": "预习第三节，标出不懂的地方",
+          "submit_next": false
+        },
+        {
+          "subject": "历史",
+          "text": "整理第二单元时间轴",
+          "submit_next": true
+        },
+        {
+          "subject": "历史",
+          "text": "背诵重要历史事件的时间与意义",
+          "submit_next": false
+        },
+        {
+          "subject": "历史",
+          "text": "完成填充图册第 8–10 页",
+          "submit_next": false
+        },
+        {
+          "subject": "历史",
+          "text": "写一段 200 字的历史人物评价",
+          "submit_next": true
+        },
+        {
+          "subject": "地理",
+          "text": "填图册第 12 页",
+          "submit_next": false
+        },
+        {
+          "subject": "地理",
+          "text": "整理气候类型分布表",
+          "submit_next": false
+        },
+        {
+          "subject": "地理",
+          "text": "完成课后活动题第 2、3 题",
+          "submit_next": true
+        }
+      ],
+      "speeches": [
+        {
+          "subject": "英语A",
+          "students": "12、15、23"
+        },
+        {
+          "subject": "语文",
+          "students": "07、19"
+        }
+      ],
+      "copied_from_weekday": 0
+    }
+  },
+  "hidden_dates": [],
+  "pinned_dates": [],
+  "announcements": [
+    {
+      "id": 1,
+      "text": "明天下午 3 点召开家长会，请家长准时参加，地点在本班教室",
+      "done": false
+    },
+    {
+      "id": 2,
+      "text": "校服征订本周截止，需要调整尺码的同学到班主任处登记",
+      "done": false
+    },
+    {
+      "id": 3,
+      "text": "下周一升旗仪式由本班负责，旗手与护旗手 7:20 到操场集合",
+      "done": false
+    },
+    {
+      "id": 4,
+      "text": "秋季运动会报名表已发到班级群，请家长留意并签字确认",
+      "done": false
+    },
+    {
+      "id": 5,
+      "text": "关于举办校园读书节的通知：每人至少借阅两本书并写读后感",
+      "done": false
+    },
+    {
+      "id": 6,
+      "text": "本周五下午第三节调整为班会课，请同学们提前准备发言内容",
+      "done": false
+    },
+    {
+      "id": 7,
+      "text": "期中考试时间已确定，请同学们合理安排复习计划并注意休息",
+      "done": false
+    },
+    {
+      "id": 8,
+      "text": "教室卫生轮值表已更新，请留意自己的值日时间不要遗漏",
+      "done": false
+    },
+    {
+      "id": 9,
+      "text": "学校食堂下周起调整用餐时间，中午 12:00 准时开餐",
+      "done": false
+    },
+    {
+      "id": 10,
+      "text": "需要申请困难补助的同学请在本周内把材料交给班主任",
+      "done": false
+    },
+    {
+      "id": 11,
+      "text": "校医室提醒：近期流感多发，请注意开窗通风、勤洗手",
+      "done": false
+    },
+    {
+      "id": 12,
+      "text": "图书馆新到一批科普读物，欢迎同学们课余时间借阅",
+      "done": false
+    }
+  ],
+  "settings": {
+    "image_interval_secs": 90,
+    "morning_cutoff": "07:40",
+    "show_badge": true
+  }
+}

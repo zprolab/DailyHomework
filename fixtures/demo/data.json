@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "weekly_schedule": [
+    ["语文", "数学", "历史", "物理", "地理", "体育", "美术", "英语", "班会"],
+    ["数学", "物理", "英语", "英语", "语文", "自习", "信息", "政治", "体育"],
+    ["数学", "语文", "劳技", "英语", "英语", "心理", "数学", "历史", "生物"],
+    ["政治", "生物", "数学", "语文", "语文", "英语", "英语", "物理", "体育"],
+    ["语文", "英语", "英语", "数学", "体育", "信息", "物理", "地理", "音乐"],
+    ["", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", ""]
+  ],
+  "days": {
+    "2026-10-09": {
+      "schedule_override": [null, "体育", null, null, null, null, null, null, null],
+      "homework": [
+        { "subject": "语文", "text": "背诵《岳阳楼记》全文，明天课上抽查", "submit_next": false },
+        { "subject": "语文", "text": "随笔一篇（不少于 600 字）", "submit_next": true },
+        { "subject": "数学", "text": "练习册 P32–P35", "submit_next": false },
+        { "subject": "数学", "text": "错题本订正，每道题要写清错因", "submit_next": true },
+        { "subject": "英语A", "text": "Unit 3 词汇抄写两遍", "submit_next": true },
+        { "subject": "英语B", "text": "背诵课文第二段", "submit_next": false },
+        { "subject": "物理", "text": "实验报告：测量小灯泡的电阻", "submit_next": false }
+      ],
+      "speeches": [
+        { "subject": "英语A", "students": "12、15、23" },
+        { "subject": "语文", "students": "07" }
+      ],
+      "copied_from_weekday": 0
+    },
+    "2026-10-08": {
+      "schedule_override": [null, null, null, null, null, null, null, null, null],
+      "homework": [
+        { "subject": "化学", "text": "元素周期表前 20 号默写一遍", "submit_next": false }
+      ],
+      "speeches": [
+        { "subject": "数学", "students": "03、11、26、31" }
+      ],
+      "copied_from_weekday": null
+    },
+    "2026-10-11": {
+      "schedule_override": [null, null, null, null, null, null, null, null, null],
+      "homework": [
+        { "subject": "化学", "text": "配平方程式 15 道", "submit_next": true }
+      ],
+      "speeches": [],
+      "copied_from_weekday": 2
+    },
+    "2026-10-12": {
+      "schedule_override": [null, null, null, null, "信息", null, null, null, null],
+      "homework": [
+        { "subject": "语文", "text": "《岳阳楼记》默写一遍", "submit_next": false },
+        { "subject": "语文", "text": "读书笔记：选读一篇散文并写 300 字感想", "submit_next": false },
+        { "subject": "数学", "text": "试卷错题订正", "submit_next": false },
+        { "subject": "数学", "text": "预习 3.2 节，做完课后练习 1–5 题", "submit_next": true },
+        { "subject": "英语A", "text": "听力练习 Unit 3，跟读三遍", "submit_next": false },
+        { "subject": "英语B", "text": "作文：My Weekend（不少于 80 词）", "submit_next": true },
+        { "subject": "物理", "text": "课后习题 2.1–2.8", "submit_next": false },
+        { "subject": "历史", "text": "整理第二单元时间轴", "submit_next": false },
+        { "subject": "地理", "text": "填图册第 12 页", "submit_next": false }
+      ],
+      "speeches": [],
+      "copied_from_weekday": null
+    },
+    "2026-10-14": {
+      "schedule_override": [null, null, null, null, null, null, null, null, null],
+      "homework": [],
+      "speeches": [
+        { "subject": "语文", "students": "01、02、09" }
+      ],
+      "copied_from_weekday": null
+    }
+  },
+  "announcements": [
+    { "id": 1, "text": "明天下午 3 点召开家长会，请家长准时参加", "done": false },
+    { "id": 2, "text": "校服征订本周截止，需要调整尺码的同学到班主任处登记", "done": false },
+    { "id": 3, "text": "下周一升旗仪式由本班负责，旗手与护旗手 7:20 到操场集合", "done": false },
+    { "id": 4, "text": "秋季运动会报名表已发到班级群，请家长留意并签字", "done": false },
+    { "id": 5, "text": "上周的体检表已全部收齐", "done": true }
+  ],
+  "hidden_dates": [
+    "2026-10-01",
+    "2026-10-02",
+    "2026-10-05",
+    "2026-10-06",
+    "2026-10-07"
+  ],
+  "pinned_dates": ["2026-10-20"],
+  "settings": {
+    "image_interval_secs": 90,
+    "morning_cutoff": "07:40",
+    "show_badge": true
+  }
+}

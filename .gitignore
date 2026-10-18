@@ -1,0 +1,39 @@
+build/
+build-*/
+cmake-build-*/
+out/
+compile_commands.json
+.cache/
+.vscode/
+.idea/
+.DS_Store
+
+*.o
+*.obj
+*.exe
+*.dll
+*.dylib
+*.a
+*.lib
+*.pdb
+*.user
+
+# Runtime files the app writes next to the executable
+data/
+homework_*.png
+local_settings.json
+style.json
+crash.log
+startup_failure.log
+
+# Pre-rewrite file names: kept ignored so a legacy installation cannot be
+# committed by accident. The app only reads these, never writes them.
+每日作业数据/
+家庭作业_*.png
+每日作业本机设置.json
+每日作业配置.ini
+每日作业.exe
+每日作业-Win32版.exe
+
+dist/
+reference/

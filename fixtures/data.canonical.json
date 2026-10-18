@@ -1,0 +1,178 @@
+{
+  "version": 1,
+  "weekly_schedule": [
+    [
+      "语文",
+      "数学",
+      "历史",
+      "物理",
+      "地理",
+      "体育",
+      "美术",
+      "英语",
+      "班会"
+    ],
+    [
+      "数学",
+      "物理",
+      "英语",
+      "英语",
+      "语文",
+      "自习",
+      "信息",
+      "政治",
+      "体育"
+    ],
+    [
+      "数学",
+      "语文",
+      "劳技",
+      "英语",
+      "英语",
+      "心理",
+      "数学",
+      "历史",
+      "生物"
+    ],
+    [
+      "政治",
+      "生物",
+      "数学",
+      "语文",
+      "语文",
+      "英语",
+      "英语",
+      "物理",
+      "体育"
+    ],
+    [
+      "语文",
+      "英语",
+      "英语",
+      "数学",
+      "体育",
+      "信息",
+      "物理",
+      "地理",
+      "音乐"
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ],
+    [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  ],
+  "days": {
+    "2026-09-30": {
+      "schedule_override": [
+        null,
+        "体育",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "homework": [
+        {
+          "subject": "语文",
+          "text": "背诵《岳阳楼记》全文",
+          "submit_next": false
+        },
+        {
+          "subject": "语文",
+          "text": "随笔一篇（不少于 600 字）",
+          "submit_next": true
+        },
+        {
+          "subject": "英语A",
+          "text": "Unit 3 词汇抄写两遍",
+          "submit_next": true
+        },
+        {
+          "subject": "英语B",
+          "text": "背诵课文第二段",
+          "submit_next": true
+        }
+      ],
+      "speeches": [
+        {
+          "subject": "英语A",
+          "students": "12、15"
+        },
+        {
+          "subject": "语文",
+          "students": "07"
+        }
+      ],
+      "copied_from_weekday": null
+    },
+    "2026-10-09": {
+      "schedule_override": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "homework": [
+        {
+          "subject": "数学",
+          "text": "试卷错题订正",
+          "submit_next": false
+        }
+      ],
+      "speeches": [],
+      "copied_from_weekday": 0
+    }
+  },
+  "hidden_dates": [
+    "2026-10-02",
+    "2026-10-05"
+  ],
+  "pinned_dates": [
+    "2026-10-08"
+  ],
+  "announcements": [
+    {
+      "id": 1,
+      "text": "明天下午 3 点召开家长会，请家长准时参加",
+      "done": false
+    },
+    {
+      "id": 2,
+      "text": "校服征订本周截止",
+      "done": true
+    }
+  ],
+  "settings": {
+    "image_interval_secs": 90,
+    "morning_cutoff": "07:40",
+    "show_badge": true,
+    "english_split": false,
+    "ui_scale": 1.25
+  }
+}
