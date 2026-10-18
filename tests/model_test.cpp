@@ -45,10 +45,11 @@ DHW_TEST(model_defaults_shape) {
     for (const std::vector<std::string>& row : data.weekly_schedule) {
         DHW_CHECK_EQ(row.size(), std::size_t{9});
     }
-    DHW_CHECK_EQ(data.weekly_schedule[0][0], std::string("语文"));
-    DHW_CHECK_EQ(data.weekly_schedule[0][8], std::string("班会"));
-    DHW_CHECK_EQ(data.weekly_schedule[5][0], std::string(""));
-    DHW_CHECK_EQ(data.weekly_schedule[6][0], std::string(""));
+    for (const std::vector<std::string>& row : data.weekly_schedule) {
+        for (const std::string& cell : row) {
+            DHW_CHECK_EQ(cell, std::string(""));
+        }
+    }
     DHW_CHECK(data.days.empty());
     DHW_CHECK(data.hidden_dates.empty());
     DHW_CHECK(data.pinned_dates.empty());

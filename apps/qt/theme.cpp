@@ -392,6 +392,14 @@ QPixmap theme_icon(const QString& role, int size, const QColor& color) {
     } else if (role == QStringLiteral("settings")) {
         painter.drawEllipse(QPointF(s * 0.5, s * 0.5), s * 0.15, s * 0.15);
         painter.drawEllipse(QPointF(s * 0.5, s * 0.5), s * 0.32, s * 0.32);
+    } else if (role == QStringLiteral("credits")) {
+        // Credits page: a circled "i" is the conventional info/about affordance.
+        painter.drawEllipse(QPointF(s * 0.5, s * 0.5), s * 0.34, s * 0.34);
+        painter.setBrush(color);
+        painter.setPen(Qt::NoPen);
+        painter.drawEllipse(QPointF(s * 0.5, s * 0.31), s * 0.05, s * 0.05);
+        painter.drawRoundedRect(QRectF(s * 0.465, s * 0.42, s * 0.07, s * 0.31),
+                                s * 0.035, s * 0.035);
     } else if (role == QStringLiteral("reload")) {
         painter.drawArc(QRectF(s * 0.2, s * 0.2, s * 0.6, s * 0.6), 40 * 16, 280 * 16);
     } else if (role == QStringLiteral("plus")) {

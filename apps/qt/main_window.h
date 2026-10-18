@@ -26,6 +26,7 @@ class QStandardItemModel;
 namespace dhw::qt {
 
 class EditorPage;
+class CreditsPage;
 class PresentWindow;
 class SettingsPage;
 class WeekPage;
@@ -39,6 +40,7 @@ public:
     EditorPage* editor() const { return editor_; }
     SettingsPage* settings_page() const { return settings_; }
     WeekPage* week_page() const { return week_; }
+    CreditsPage* credits_page() const { return credits_; }
     void set_current_date(const QString& date);
     void show_page(const QString& page);
     void toggle_sidebar();
@@ -117,6 +119,7 @@ private:
     EditorPage* editor_ = nullptr;
     SettingsPage* settings_ = nullptr;
     WeekPage* week_ = nullptr;
+    CreditsPage* credits_ = nullptr;
     PresentWindow* present_ = nullptr;
     QWidget* sidebar_ = nullptr;
     QWidget* toolbar_ = nullptr;
@@ -146,6 +149,7 @@ private:
     QToolButton* nav_edit_ = nullptr;
     QToolButton* nav_week_ = nullptr;
     QToolButton* nav_settings_ = nullptr;
+    QToolButton* nav_credits_ = nullptr;
 #endif
     QHBoxLayout* toolbar_layout_ = nullptr;
     ActionControl* previous_ = nullptr;

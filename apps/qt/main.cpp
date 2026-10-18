@@ -70,7 +70,7 @@ Options parse_options(int argc, char** argv) {
         } else if (flag == "--list-styles") {
             options.list_styles = true;
         } else if (flag == "--page") {
-            // Only changes the page the shell starts on (edit | week | settings).
+            // Only changes the page the shell starts on (edit | week | settings | credits).
             value(options.page);
         } else if (flag == "--submit-only") {
             options.submit_only = true;

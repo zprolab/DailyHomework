@@ -9,13 +9,28 @@ namespace {
 const dhw::StubTextMetrics kMetrics;
 const dhw::LayoutStyle kStyle;
 
+dhw::AppData app_data() {
+    // Layout tests need a filled timetable; AppData::defaults() is empty by design.
+    dhw::AppData data = dhw::AppData::defaults();
+    data.weekly_schedule = dhw::normalize_weekly({
+        {"语文", "数学", "历史", "物理", "地理", "体育", "美术", "英语", "班会"},
+        {"数学", "物理", "英语", "英语", "语文", "自习", "信息", "政治", "体育"},
+        {"数学", "语文", "劳技", "英语", "英语", "心理", "数学", "历史", "生物"},
+        {"政治", "生物", "数学", "语文", "语文", "英语", "英语", "物理", "体育"},
+        {"语文", "英语", "英语", "数学", "体育", "信息", "物理", "地理", "音乐"},
+        {},
+        {},
+    });
+    return data;
+}
+
 dhw::Homework hw(const std::string& subject, const std::string& text, bool submit = false) {
     return dhw::Homework{subject, text, submit};
 }
 
 dhw::ViewModel model_with(std::vector<dhw::Homework> homework, std::vector<std::string> suggestions = {},
                           bool submit_only = false, const std::string& date = "2026-10-12") {
-    dhw::AppData data = dhw::AppData::defaults();
+    dhw::AppData data = app_data();
     if (!homework.empty()) {
         data.day(date).homework = std::move(homework);
     }
@@ -226,7 +241,7 @@ DHW_TEST(layout_truncates_overflowing_homework) {
 }
 
 DHW_TEST(layout_renders_schedule_in_two_columns) {
-    dhw::AppData data = dhw::AppData::defaults();
+    dhw::AppData data = app_data();
     data.settings.english_split = false;
     dhw::Day& day = data.day("2026-10-12");
     day.homework.push_back(hw("语文", "抄写"));
@@ -263,7 +278,7 @@ DHW_TEST(layout_renders_schedule_in_two_columns) {
 }
 
 DHW_TEST(layout_marks_swapped_periods) {
-    dhw::AppData data = dhw::AppData::defaults();
+    dhw::AppData data = app_data();
     dhw::Day& day = data.day("2026-10-12");
     day.schedule_override[0] = std::string("体育");
     const dhw::ViewModel view = dhw::build_view_model(data, "2026-10-12", false);
@@ -285,7 +300,7 @@ DHW_TEST(layout_marks_swapped_periods) {
 }
 
 DHW_TEST(layout_renders_speeches) {
-    dhw::AppData data = dhw::AppData::defaults();
+    dhw::AppData data = app_data();
     dhw::Day& day = data.day("2026-10-12");
     day.homework.push_back(hw("语文", "抄写"));
     day.speeches.push_back(dhw::Speech{"英语", "1号 张三；2号 李四；3号 王五"});
@@ -352,7 +367,7 @@ DHW_TEST(layout_type_hierarchy_is_never_inverted) {
     view.speech_warn = false;
     view.announcements.push_back(dhw::Announcement{1, "明天带手工材料", false});
 
-    dhw::AppData data = dhw::AppData::defaults();
+    dhw::AppData data = app_data();
     dhw::Day& day = data.day("2026-10-12");
     day.homework = view.homework;
     day.speeches = view.speeches;

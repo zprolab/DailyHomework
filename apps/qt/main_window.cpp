@@ -46,6 +46,7 @@
 #include <cmath>
 
 #include "dhw/schedule.h"
+#include "credits_page.h"
 #include "editor_page.h"
 #include "present_window.h"
 #include "settings_page.h"
@@ -327,9 +328,11 @@ void MainWindow::build_shell() {
     editor_ = new EditorPage(controller_, pages_);
     week_ = new WeekPage(controller_, pages_);
     settings_ = new SettingsPage(controller_, pages_);
+    credits_ = new CreditsPage(pages_);
     pages_->addWidget(editor_);
     pages_->addWidget(week_);
     pages_->addWidget(settings_);
+    pages_->addWidget(credits_);
     connect(week_, &WeekPage::sidebar_toggle_requested, this, &MainWindow::on_toggle_sidebar);
     connect(week_, &WeekPage::back_requested, this, [this]() { show_page(QStringLiteral("edit")); });
     connect(week_, &WeekPage::toast_requested, this, &MainWindow::toast);
@@ -338,6 +341,10 @@ void MainWindow::build_shell() {
     connect(settings_, &SettingsPage::back_requested, this,
             [this]() { show_page(QStringLiteral("edit")); });
     connect(settings_, &SettingsPage::toast_requested, this, &MainWindow::toast);
+    connect(credits_, &CreditsPage::sidebar_toggle_requested, this,
+            &MainWindow::on_toggle_sidebar);
+    connect(credits_, &CreditsPage::back_requested, this,
+            [this]() { show_page(QStringLiteral("edit")); });
     connect(settings_, &SettingsPage::theme_preview_requested, this,
             [this](double scale) {
                 dhw::qt::apply_theme(appearance_, scale);
@@ -384,6 +391,7 @@ QWidget* MainWindow::build_sidebar() {
         {"编辑", "edit", "编辑（Alt+1~4 在条目间跳）", "编辑"},
         {"课表总览", "week", "课表总览", "课表总览"},
         {"设置", "settings", "设置", "设置"},
+        {"致谢", "credits", "致谢（Credits）", "致谢"},
     };
 
     brand_label_ = make_fluent_title(QStringLiteral("每日作业"), sidebar);
@@ -413,7 +421,7 @@ QWidget* MainWindow::build_sidebar() {
     nav_list_->setUniformItemSizes(true);
     nav_list_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     nav_list_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    nav_list_->setFixedHeight(3 * ui_px(40) + ui_px(8));
+    nav_list_->setFixedHeight(nav_model_->rowCount() * ui_px(40) + ui_px(8));
     nav_list_->setSelectedIndex(0);
     connect(nav_list_, &QListView::clicked, this, [this](const QModelIndex& index) {
         if (!index.isValid() || updating_nav_) {
@@ -488,13 +496,17 @@ QWidget* MainWindow::build_sidebar() {
                          QStringLiteral("课表总览"));
     nav_settings_ = make_nav(QStringLiteral("设置"), QStringLiteral("settings"),
                              QStringLiteral("设置"));
+    nav_credits_ = make_nav(QStringLiteral("致谢"), QStringLiteral("credits"),
+                            QStringLiteral("致谢（Credits）"));
     nav_edit_->setChecked(true);
     layout->addWidget(nav_edit_);
     layout->addWidget(nav_week_);
     layout->addWidget(nav_settings_);
+    layout->addWidget(nav_credits_);
     connect(nav_edit_, &QToolButton::clicked, this, [this]() { on_page_clicked(0); });
     connect(nav_week_, &QToolButton::clicked, this, [this]() { on_page_clicked(1); });
     connect(nav_settings_, &QToolButton::clicked, this, [this]() { on_page_clicked(2); });
+    connect(nav_credits_, &QToolButton::clicked, this, [this]() { on_page_clicked(3); });
 
     layout->addStretch(1);
 
@@ -1226,6 +1238,7 @@ void MainWindow::sync_nav_selection() {
         nav_edit_->setChecked(index == 0);
         nav_week_->setChecked(index == 1);
         nav_settings_->setChecked(index == 2);
+        nav_credits_->setChecked(index == 3);
     }
 #endif
 }
@@ -1247,7 +1260,7 @@ void MainWindow::apply_shell_metrics() {
     }
     if (nav_list_ != nullptr) {
         nav_list_->setIconSize(QSize(ui_px(18), ui_px(18)));
-        nav_list_->setFixedHeight(3 * item_height + ui_px(8));
+        nav_list_->setFixedHeight(nav_model_->rowCount() * item_height + ui_px(8));
     }
     const int rail_side = ui_px(kCompactRailSide);
     const int rail_icon = ui_px(kCompactRailIcon);
@@ -1380,6 +1393,8 @@ void MainWindow::show_page(const QString& page) {
         on_page_clicked(1);
     } else if (page == QStringLiteral("settings")) {
         on_page_clicked(2);
+    } else if (page == QStringLiteral("credits")) {
+        on_page_clicked(3);
     } else {
         on_page_clicked(0);
     }

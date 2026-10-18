@@ -10,7 +10,19 @@
 namespace {
 
 dhw::AppData sample() {
-    return dhw::AppData::defaults();
+    // The schedule rules are tested against an explicit timetable: AppData::defaults()
+    // itself must be empty now (see model_defaults_shape for that contract).
+    dhw::AppData data = dhw::AppData::defaults();
+    data.weekly_schedule = dhw::normalize_weekly({
+        {"语文", "数学", "历史", "物理", "地理", "体育", "美术", "英语", "班会"},
+        {"数学", "物理", "英语", "英语", "语文", "自习", "信息", "政治", "体育"},
+        {"数学", "语文", "劳技", "英语", "英语", "心理", "数学", "历史", "生物"},
+        {"政治", "生物", "数学", "语文", "语文", "英语", "英语", "物理", "体育"},
+        {"语文", "英语", "英语", "数学", "体育", "信息", "物理", "地理", "音乐"},
+        {},
+        {},
+    });
+    return data;
 }
 
 dhw::Time at(int hour, int minute) {
@@ -40,15 +52,13 @@ int count_starting_with(const std::vector<std::string>& items, const std::string
 }  // namespace
 
 DHW_TEST(default_weekly_is_7x9) {
-    const dhw::AppData data = sample();
+    const dhw::AppData data = dhw::AppData::defaults();
     DHW_CHECK_EQ(data.weekly_schedule.size(), std::size_t{7});
     for (const std::vector<std::string>& row : data.weekly_schedule) {
         DHW_CHECK_EQ(row.size(), std::size_t{9});
-    }
-    DHW_CHECK_EQ(data.weekly_schedule[0][0], std::string("语文"));
-    for (int i = 0; i < dhw::kPeriods; ++i) {
-        DHW_CHECK_EQ(data.weekly_schedule[5][static_cast<std::size_t>(i)], std::string(""));
-        DHW_CHECK_EQ(data.weekly_schedule[6][static_cast<std::size_t>(i)], std::string(""));
+        for (const std::string& cell : row) {
+            DHW_CHECK_EQ(cell, std::string(""));
+        }
     }
 }
 

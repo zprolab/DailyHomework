@@ -19,29 +19,22 @@
 
 ### 1.1 `data.json` 顶层：`AppData`（model.rs:77-104）
 
-`AppData` 带**容器级** `#[serde(default)]`，即：整个对象可以缺字段，缺的字段取 `AppData::default()` 里对应值；整个文件若缺失（或解析失败）由 `store::load_or_recover` 兜底。
+`AppData` 带**容器级** `#[serde(default)]`，即：整个对象可以缺字段，缺的字段取 `AppData::default()` 里对应值；整个文件缺失时按**首次启动**处理（空数据、不报错），解析失败才由 `store::load_or_recover` 走备份恢复。
 
 | 字段（snake_case） | 类型 | 可选性 | 默认值 | 说明 |
 |---|---|---|---|---|
 | `version` | `u32` | 可缺省 | `1` | 见 1.5 |
-| `weekly_schedule` | `Vec<Vec<String>>` | 可缺省 | `schedule::default_weekly_schedule()`（7 行 × 9 列，周一~周五有内容，周六周日为 9 个空串） | 读入后由 `normalize()` 规范化 |
+| `weekly_schedule` | `Vec<Vec<String>>` | 可缺省 | `schedule::default_weekly_schedule()`（7 行 × 9 列，**全空串**） | 读入后由 `normalize()` 规范化 |
 | `days` | `BTreeMap<String, Day>` | 可缺省 | `{}` | key = `"YYYY-MM-DD"`；**键不做校验、不做删除**；`BTreeMap` 决定序列化顺序 = 日期字符串字典序 |
 | `hidden_dates` | `Vec<String>` | 可缺省 | `[]` | 设置页「移出列表」的日期，只对没有条目的日期生效 |
 | `pinned_dates` | `Vec<String>` | 可缺省 | `[]` | 设置页「快捷显示」，**不被任何判定函数读取**，只加一个日期栏入口 |
 | `announcements` | `Vec<Announcement>` | 可缺省 | `[]` | 全局一列，不分日期 |
 | `settings` | `Settings` | 可缺省 | `Settings::default()` | 见 1.4 |
 
-`AppData::default()` 里的 `weekly_schedule` 是硬编码的默认周课表（schedule.rs:4-15，**必须逐字照抄**）：
-
-```text
-0(周一): 语文 数学 历史 物理 地理 体育 美术 英语 班会
-1(周二): 数学 物理 英语 英语 语文 自习 信息 政治 体育
-2(周三): 数学 语文 劳技 英语 英语 心理 数学 历史 生物
-3(周四): 政治 生物 数学 语文 语文 英语 英语 物理 体育
-4(周五): 语文 英语 英语 数学 体育 信息 物理 地理 音乐
-5(周六): （9 个空串）
-6(周日): （9 个空串）
-```
+`AppData::default()` 里的 `weekly_schedule` 是 **7 行 × 9 列的全空课表**（2026-10-18 决策）：
+全新安装不内置任何默认科目，旧实现里硬编码的示例课表只作为测试夹具存在，不再进二进制。
+格子的 7×9 形状保留，因此编辑器和排版不需要第二条「没有课表」的代码路径；`normalize()` 仍把
+任意长度补齐/截断到这个形状。
 
 ### 1.2 `days[date]`：`Day`（model.rs:19-44）
 

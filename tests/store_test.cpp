@@ -249,14 +249,14 @@ DHW_TEST(ignores_legacy_fields_on_load) {
     DHW_CHECK_EQ(dhw::to_json(loaded.data).dump(2).find("data_dir"), std::string::npos);
 }
 
-DHW_TEST(empty_dir_gives_default_with_notice) {
+DHW_TEST(empty_dir_is_a_clean_first_run) {
     TempDir dir("empty");
     const dhw::LoadResult result = dhw::load_or_recover(dir.path);
-    DHW_CHECK(result.data.days.empty());
-    DHW_CHECK(!result.error.empty());
-    DHW_CHECK(!result.ok);
+    DHW_CHECK(result.ok);
+    DHW_CHECK(result.error.empty());
     DHW_CHECK(!result.recovered_from_backup);
-    DHW_CHECK_EQ(result.data.settings.image_interval_secs, 60);
+    DHW_CHECK(result.data == dhw::AppData::defaults());
+    DHW_CHECK(result.data.days.empty());
     DHW_CHECK(!dhw::fs::exists(dir.file("data.json")));
 }
 

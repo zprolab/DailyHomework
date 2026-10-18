@@ -263,16 +263,10 @@ void AppData::normalize(const Date& today) {
 }
 
 std::vector<std::vector<std::string>> default_weekly_schedule() {
-    const std::vector<std::vector<std::string>> rows = {
-        {"语文", "数学", "历史", "物理", "地理", "体育", "美术", "英语", "班会"},
-        {"数学", "物理", "英语", "英语", "语文", "自习", "信息", "政治", "体育"},
-        {"数学", "语文", "劳技", "英语", "英语", "心理", "数学", "历史", "生物"},
-        {"政治", "生物", "数学", "语文", "语文", "英语", "英语", "物理", "体育"},
-        {"语文", "英语", "英语", "数学", "体育", "信息", "物理", "地理", "音乐"},
-        {},
-        {},
-    };
-    return normalize_weekly(rows);
+    // A fresh installation starts with an empty timetable: no subject names are baked
+    // into the binary. The grid keeps its 7 x 9 shape so the editor and the layout do
+    // not need a second "no timetable" code path; only the content is empty.
+    return normalize_weekly({});
 }
 
 std::vector<std::vector<std::string>> normalize_weekly(std::vector<std::vector<std::string>> rows) {

@@ -450,6 +450,7 @@ LoadResult load(const std::string& dir) {
 }
 
 LoadResult load_or_recover(const std::string& dir) {
+    const bool had_data_file = fs::exists(data_file(dir));
     LoadResult result = load(dir);
     if (result.ok) {
         return result;
@@ -477,6 +478,13 @@ LoadResult load_or_recover(const std::string& dir) {
         return result;
     }
     result.data = AppData::defaults();
+    if (!had_data_file) {
+        // Fresh installation: the directory (or data.json) simply does not exist yet.
+        // That is a healthy empty start, not a load failure.
+        result.ok = true;
+        result.error.clear();
+        return result;
+    }
     result.error = "数据文件不可用（" + result.error + "），已创建空数据";
     return result;
 }
