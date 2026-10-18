@@ -35,13 +35,23 @@ jobs:
           arch: win64_msvc2022_64
           cache: true
 
+      # windows-latest now ships Visual Studio 2026 (v18), but the CMake 4.4.4
+      # bundled with the image only advertises the VS 17 2022 generator, so the
+      # script cannot configure with a Visual Studio generator ("could not find
+      # any instance of Visual Studio"). Use the Ninja fallback that
+      # docs/BUILD-WINDOWS.md recommends, after putting cl.exe/rc.exe on PATH.
+      - name: Set up MSVC environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
       # Same entry point as a developer on Windows: configure, build, ctest,
       # windeployqt and the dist zip. The script fails the step if ctest fails.
       - name: Build, test, deploy, package
         shell: pwsh
         run: |
           powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows.ps1 `
-            -QtDir $env:QT_ROOT_DIR -Deploy -Zip
+            -QtDir $env:QT_ROOT_DIR -Generator Ninja -Deploy -Zip
 
       - name: Headless render (1920x1080)
         shell: pwsh
@@ -52,7 +62,13 @@ jobs:
           New-Item -ItemType Directory -Force -Path $data | Out-Null
           Copy-Item "fixtures\demo\data.json" (Join-Path $data "data.json") -Force
           New-Item -ItemType Directory -Force -Path "build\verify" | Out-Null
-          & "build\apps\qt\Release\DaHoWork.exe" --data-dir $data --date 2026-10-12 `
+          # Visual Studio generators put the exe under Release\, Ninja does not.
+          $exe = @(
+            "build\apps\qt\Release\DaHoWork.exe",
+            "build\apps\qt\DaHoWork.exe"
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $exe) { throw "DaHoWork.exe was not found in the build tree" }
+          & $exe --data-dir $data --date 2026-10-12 `
             --render "build\verify\render-1920x1080.png"
           if ($LASTEXITCODE -ne 0) { throw "render exited with code $LASTEXITCODE" }
           $path = "build\verify\render-1920x1080.png"
