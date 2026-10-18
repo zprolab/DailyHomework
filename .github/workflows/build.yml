@@ -68,12 +68,18 @@ jobs:
             "build\apps\qt\DaHoWork.exe"
           ) | Where-Object { Test-Path $_ } | Select-Object -First 1
           if (-not $exe) { throw "DaHoWork.exe was not found in the build tree" }
-          & $exe --data-dir $data --date 2026-10-12 `
-            --render "build\verify\render-1920x1080.png"
-          if ($LASTEXITCODE -ne 0) { throw "render exited with code $LASTEXITCODE" }
-          $path = "build\verify\render-1920x1080.png"
-          if (-not (Test-Path $path)) { throw "render output is missing" }
-          $bytes = [System.IO.File]::ReadAllBytes($path)
+          $renderPath = "build\verify\render-1920x1080.png"
+          # DaHoWork.exe is a GUI-subsystem binary: PowerShell does not wait for it
+          # and leaves $LASTEXITCODE empty when it is invoked with the call operator,
+          # so use Start-Process -Wait and read its ExitCode instead.
+          $process = Start-Process -FilePath $exe -Wait -PassThru `
+            -ArgumentList @("--data-dir", $data, "--date", "2026-10-12",
+                            "--render", $renderPath)
+          if ($process.ExitCode -ne 0) {
+            throw "render exited with code $($process.ExitCode)"
+          }
+          if (-not (Test-Path $renderPath)) { throw "render output is missing" }
+          $bytes = [System.IO.File]::ReadAllBytes($renderPath)
           $width = ([int]($bytes[16]) -shl 24) -bor ([int]($bytes[17]) -shl 16) -bor `
                    ([int]($bytes[18]) -shl 8) -bor [int]($bytes[19])
           $height = ([int]($bytes[20]) -shl 24) -bor ([int]($bytes[21]) -shl 16) -bor `
