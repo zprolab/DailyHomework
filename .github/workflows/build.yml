@@ -13,6 +13,11 @@ concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: true
 
+# sccache's GitHub Actions cache backend; the compiler launcher itself is set in
+# cmake (see the jobs below / scripts/build-windows.ps1).
+env:
+  SCCACHE_GHA_ENABLED: "true"
+
 jobs:
   windows:
     name: Windows (MSVC, Qt 6.10.3)
@@ -21,6 +26,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # Compile cache shared between runs. The Windows build script detects
+      # sccache on PATH and passes it as CMAKE_CXX_COMPILER_LAUNCHER.
+      - name: Set up sccache
+        uses: mozilla-actions/sccache-action@v0.0.11
 
       # Qt 6.11+ ships Windows binaries in per-architecture repository folders
       # (qt6_6120/qt6_6120_msvc2022_64/Updates.xml). install-qt-action pins
@@ -107,6 +117,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up sccache
+        uses: mozilla-actions/sccache-action@v0.0.11
+
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
         with:
@@ -116,7 +129,9 @@ jobs:
       - name: Configure
         run: |
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR"
+            -DCMAKE_PREFIX_PATH="$QT_ROOT_DIR" \
+            -DCMAKE_C_COMPILER_LAUNCHER=sccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=sccache
 
       - name: Build
         run: cmake --build build --parallel "$(sysctl -n hw.ncpu)"

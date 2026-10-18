@@ -40,6 +40,7 @@ powershell -ExecutionPolicy Bypass -File scripts\build-windows.ps1 `
 | `-BuildDir` | `build` | 构建目录 |
 | `-Config` | `Release` | VS 配置 |
 | `-Jobs` | 自动（CPU 核数） | 并行编译任务数，原样传给 `cmake --build --parallel`，日志会打印实际值 |
+| `-NoSccache` | 关 | PATH 里有 `sccache` 时默认启用编译缓存；加这个开关强制直接调用编译器 |
 | `-StaticQt` | 关 | 与静态 Qt 套件配对：`/MT` 静态 CRT + 跳过 `windeployqt`；不能把共享套件变成自包含，见「形态二」 |
 | `-SkipTests` | 关 | 跳过 `ctest` |
 | `-Deploy` | 关 | 运行 `windeployqt`，把 Qt 运行库放进 exe 目录 |

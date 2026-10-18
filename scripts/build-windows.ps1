@@ -39,7 +39,8 @@ param(
     [switch]$Deploy,
     [switch]$Zip,
     [switch]$Force,
-    [switch]$Fluent
+    [switch]$Fluent,
+    [switch]$NoSccache
 )
 
 $ErrorActionPreference = "Stop"
@@ -48,6 +49,19 @@ Set-Location $root
 
 if ($Jobs -le 0) {
     $Jobs = [Environment]::ProcessorCount
+}
+
+# Reuse object files through sccache when it is on PATH (CI installs it and sets
+# SCCACHE_GHA_ENABLED; the CMake compiler launcher makes cl.exe go through it).
+$sccache = $null
+if (-not $NoSccache) {
+    $sccacheCommand = Get-Command sccache.exe -ErrorAction SilentlyContinue
+    if (-not $sccacheCommand) {
+        $sccacheCommand = Get-Command sccache -ErrorAction SilentlyContinue
+    }
+    if ($sccacheCommand) {
+        $sccache = $sccacheCommand.Source
+    }
 }
 
 if ($Zip -and -not $Deploy) {
@@ -251,6 +265,7 @@ Write-Host "Qt: $QtDir"
 Write-Host ("generator: {0}{1}" -f $generatorName, $(if ($isVisualStudio) { " (x64)" } else { "" }))
 Write-Host "build dir: $BuildDir ($Config)"
 Write-Host ("parallel jobs: {0} (cmake --build --parallel {0})" -f $Jobs)
+Write-Host ("sccache: {0}" -f $(if ($sccache) { $sccache } else { "not used" }))
 Write-Host ("options: Deploy={0} Zip={1} StaticQt={2} Force={3} SkipTests={4} Fluent={5}" -f $Deploy, $Zip, $StaticQt, $Force, $SkipTests, $Fluent)
 
 $qtLinkMode = Get-QtKitLinkMode $QtDir
@@ -295,6 +310,10 @@ $configArgs = @(
 )
 if ($isVisualStudio) {
     $configArgs += @("-A", "x64")
+}
+if ($sccache) {
+    $configArgs += "-DCMAKE_C_COMPILER_LAUNCHER=$sccache"
+    $configArgs += "-DCMAKE_CXX_COMPILER_LAUNCHER=$sccache"
 }
 if ($StaticQt) {
     $configArgs += "-DDHW_STATIC_QT=ON"
