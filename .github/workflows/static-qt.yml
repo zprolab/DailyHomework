@@ -1,0 +1,236 @@
+name: static-qt
+
+# One-off builder for a *static* Qt on Windows (qtbase only). This is deliberately
+# workflow_dispatch only: it is slow (a Qt build from source), and its job is to fill
+# the actions/cache entry that the regular build workflow can then restore in seconds.
+#
+# Requirements for a larger runner: GitHub-hosted larger runners are not available on
+# the Free organization plan (the API answers "GitHub hosted runners are not supported
+# for this organization"), so this default runs on the standard windows-latest runner
+# and spends the included minutes. If the org is upgraded to Team/Enterprise and a
+# larger runner (e.g. windows-latest-8-cores) is available, pass its label as `runner`.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "configure = fast smoke test (no Qt build); full = build Qt, cache it and build the static app"
+        required: true
+        default: configure
+        type: choice
+        options:
+          - configure
+          - full
+      runner:
+        description: "Runner label (windows-latest on Free; larger labels need Team/Enterprise)"
+        required: true
+        default: windows-latest
+        type: string
+      qt_version:
+        description: "Qt version to build from source"
+        required: true
+        default: "6.12.0"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: static-qt-${{ inputs.qt_version }}
+  cancel-in-progress: false
+
+jobs:
+  build-static-qt:
+    name: Static Qt ${{ inputs.qt_version }} on ${{ inputs.runner }}
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 300
+    env:
+      QT_PREFIX: C:\Qt\6.12.0-static
+      QT_SRC_ROOT: C:\Qt\src
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download Qt source
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check --upgrade aqtinstall
+          python -m aqt install-src windows desktop ${{ inputs.qt_version }} `
+            --outputdir "$env:QT_SRC_ROOT"
+
+      - name: Locate Qt source tree
+        id: src
+        shell: pwsh
+        run: |
+          $configure = Get-ChildItem "$env:QT_SRC_ROOT" -Recurse -Filter configure.bat |
+            Where-Object { Test-Path (Join-Path (Split-Path $_.FullName -Parent) "qtbase") } |
+            Select-Object -First 1
+          if (-not $configure) { throw "configure.bat (with a qtbase sibling) was not found" }
+          $root = Split-Path $configure.FullName -Parent
+          Write-Host "Qt source: $root"
+          "path=$root" >> $env:GITHUB_OUTPUT
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      # Restores the prefix if a previous manual run already built it; the same step
+      # saves it automatically at the end of a successful full run.
+      - name: Restore static Qt cache
+        id: qtcache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.QT_PREFIX }}
+          key: qt-static-windows-msvc-${{ inputs.qt_version }}-v1
+
+      - name: Configure static Qt (configure-only smoke test)
+        if: inputs.mode == 'configure' && steps.qtcache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          Set-Location "${{ steps.src.outputs.path }}"
+          $args = @(
+            "-static", "-static-runtime", "-release", "-prefix", $env:QT_PREFIX,
+            "-cmake-generator", "Ninja",
+            "-nomake", "examples", "-nomake", "tests",
+            "-skip", "qtwebengine", "-skip", "qtdeclarative", "-skip", "qtquick3d",
+            "-skip", "qtcharts", "-skip", "qtmultimedia", "-skip", "qt3d",
+            "-skip", "qt5compat", "-skip", "qtdatavis3d", "-skip", "qtnetworkauth",
+            "-skip", "qttools", "-skip", "qtimageformats",
+            "-no-opengl"
+          )
+          Write-Host "configure.bat $($args -join ' ')"
+          & .\configure.bat @args
+          if ($LASTEXITCODE -ne 0) { throw "Qt configure failed with exit code $LASTEXITCODE" }
+          Get-ChildItem -Path . -Filter "config.*" | ForEach-Object { Write-Host $_.Name }
+
+      - name: Configure static Qt
+        if: inputs.mode == 'full' && steps.qtcache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          Set-Location "${{ steps.src.outputs.path }}"
+          $args = @(
+            "-static", "-static-runtime", "-release", "-prefix", $env:QT_PREFIX,
+            "-cmake-generator", "Ninja",
+            "-nomake", "examples", "-nomake", "tests",
+            "-skip", "qtwebengine", "-skip", "qtdeclarative", "-skip", "qtquick3d",
+            "-skip", "qtcharts", "-skip", "qtmultimedia", "-skip", "qt3d",
+            "-skip", "qt5compat", "-skip", "qtdatavis3d", "-skip", "qtnetworkauth",
+            "-skip", "qttools", "-skip", "qtimageformats",
+            "-no-opengl"
+          )
+          Write-Host "configure.bat $($args -join ' ')"
+          & .\configure.bat @args
+          if ($LASTEXITCODE -ne 0) { throw "Qt configure failed with exit code $LASTEXITCODE" }
+
+      - name: Build and install static Qt
+        if: inputs.mode == 'full' && steps.qtcache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          Set-Location "${{ steps.src.outputs.path }}"
+          Write-Host "building with $env:NUMBER_OF_PROCESSORS parallel jobs"
+          cmake --build . --parallel $env:NUMBER_OF_PROCESSORS
+          if ($LASTEXITCODE -ne 0) { throw "Qt build failed with exit code $LASTEXITCODE" }
+          cmake --install .
+          if ($LASTEXITCODE -ne 0) { throw "Qt install failed with exit code $LASTEXITCODE" }
+
+      - name: Verify the kit is really static
+        if: inputs.mode == 'full'
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "$env:QT_PREFIX\lib\Qt6Core.lib")) {
+            throw "missing $env:QT_PREFIX\lib\Qt6Core.lib"
+          }
+          if (Test-Path "$env:QT_PREFIX\bin\Qt6Core.dll") {
+            throw "the prefix still contains Qt6Core.dll; this is a shared Qt kit"
+          }
+          $qconfig = "$env:QT_PREFIX\mkspecs\qconfig.pri"
+          if (-not (Test-Path $qconfig)) { throw "missing $qconfig" }
+          $line = (Select-String -Path $qconfig -Pattern '^QT_CONFIG\s*\+=' | Select-Object -First 1).Line
+          Write-Host "qconfig: $line"
+          if ($line -notmatch '\bstatic\b') { throw "qconfig.pri does not report a static Qt build" }
+          Write-Host "ok: static Qt kit at $env:QT_PREFIX"
+
+      - name: Upload configure artifacts (smoke test)
+        if: inputs.mode == 'configure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: qt-configure-${{ inputs.qt_version }}
+          path: |
+            ${{ steps.src.outputs.path }}/config.summary
+            ${{ steps.src.outputs.path }}/config.opt
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Build the application against the static Qt
+        if: inputs.mode == 'full'
+        shell: pwsh
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows.ps1 `
+            -QtDir $env:QT_PREFIX -StaticQt -Generator Ninja `
+            -Jobs $([Environment]::ProcessorCount) -Deploy -Zip
+          if ($LASTEXITCODE -ne 0) { throw "static application build failed with exit code $LASTEXITCODE" }
+
+      - name: Headless render with the static app
+        if: inputs.mode == 'full'
+        shell: pwsh
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          $data = Join-Path $env:RUNNER_TEMP "dhw-static-data"
+          New-Item -ItemType Directory -Force -Path $data | Out-Null
+          Copy-Item "fixtures\demo\data.json" (Join-Path $data "data.json") -Force
+          New-Item -ItemType Directory -Force -Path "build\verify" | Out-Null
+          $exe = @(
+            "build\apps\qt\Release\DaHoWork.exe",
+            "build\apps\qt\DaHoWork.exe"
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $exe) { throw "DaHoWork.exe was not found" }
+          $process = Start-Process -FilePath $exe -Wait -PassThru `
+            -ArgumentList @("--data-dir", $data, "--date", "2026-10-12",
+                            "--render", "build\verify\render-1920x1080.png")
+          if ($process.ExitCode -ne 0) { throw "static render exited with code $($process.ExitCode)" }
+          if (-not (Test-Path "build\verify\render-1920x1080.png")) {
+            throw "static render output is missing"
+          }
+
+      - name: Archive static Qt and the static app
+        if: inputs.mode == 'full'
+        shell: pwsh
+        run: |
+          $sevenZip = "C:\Program Files\7-Zip\7z.exe"
+          if (Test-Path $sevenZip) {
+            & $sevenZip a -t7z -mx=5 "qt-static-${{ inputs.qt_version }}.7z" $env:QT_PREFIX
+            if ($LASTEXITCODE -ne 0) { throw "7z failed with exit code $LASTEXITCODE" }
+          } else {
+            Compress-Archive -Path $env:QT_PREFIX -DestinationPath "qt-static-${{ inputs.qt_version }}.zip"
+          }
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item "build\verify\render-1920x1080.png" "dist\render-1920x1080.png" -Force
+
+      - name: Upload static Qt + static app artifacts
+        if: inputs.mode == 'full'
+        uses: actions/upload-artifact@v4
+        with:
+          name: DaHoWork-static-${{ inputs.qt_version }}
+          path: |
+            qt-static-${{ inputs.qt_version }}.*
+            dist/DaHoWork-win64.zip
+            dist/render-1920x1080.png
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Summary
+        if: always()
+        shell: pwsh
+        run: |
+          Write-Host "mode=${{ inputs.mode }} runner=${{ inputs.runner }} qt=${{ inputs.qt_version }}"
+          Write-Host "cache key: qt-static-windows-msvc-${{ inputs.qt_version }}-v1"
+          if (Test-Path $env:QT_PREFIX) {
+            Write-Host ("static prefix size: {0:N1} MB" -f ((Get-ChildItem $env:QT_PREFIX -Recurse -File | Measure-Object Length -Sum).Sum / 1MB))
+          }
