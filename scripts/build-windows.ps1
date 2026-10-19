@@ -362,7 +362,7 @@ if ($Deploy) {
     } else {
         $windeploy = Join-Path $QtDir "bin\windeployqt.exe"
         if (-not (Test-Path $windeploy)) { throw "missing windeployqt: $windeploy" }
-        & $windeploy --release --no-translations --no-system-d3d-compiler --no-opengl-sw $exe
+        & $windeploy --release --compiler-runtime --no-translations --no-system-d3d-compiler --no-opengl-sw $exe
         if ($LASTEXITCODE -ne 0) { throw "windeployqt failed with exit code $LASTEXITCODE" }
         # verify-windows.ps1 runs the app with QT_QPA_PLATFORM=offscreen so no
         # window flashes during acceptance; make sure that plugin is present.
@@ -371,6 +371,38 @@ if ($Deploy) {
         if ((Test-Path $offscreen) -and (Test-Path $platforms) -and -not (Test-Path (Join-Path $platforms "qoffscreen.dll"))) {
             Copy-Item $offscreen $platforms -Force
         }
+        # Classroom machines are restored on every reboot, so the VC++ runtime has to
+        # travel inside this folder instead of being installed system-wide. windeployqt
+        # usually copies it with --compiler-runtime; fall back to the VS redist when the
+        # Qt kit was built against a different toolset.
+        $vcRuntime = @("msvcp140.dll", "vcruntime140.dll", "vcruntime140_1.dll")
+        $missing = @($vcRuntime | Where-Object { -not (Test-Path (Join-Path $appDir $_)) })
+        if ($missing.Count -gt 0) {
+            $vswhere = Join-Path ${env:ProgramFiles(x86)} "Microsoft Visual Studio\Installer\vswhere.exe"
+            if (Test-Path $vswhere) {
+                $vsInstall = & $vswhere -latest -products * -property installationPath 2>$null
+                $redistRoot = if ($vsInstall) { Join-Path $vsInstall "VC\Redist\MSVC" } else { "" }
+                if ($redistRoot -and (Test-Path $redistRoot)) {
+                    $crtDir = Get-ChildItem $redistRoot -Directory |
+                        Sort-Object Name -Descending |
+                        ForEach-Object {
+                            Get-ChildItem (Join-Path $_.FullName "x64") -Directory `
+                                -Filter "Microsoft.VC*.CRT" -ErrorAction SilentlyContinue
+                        } |
+                        Select-Object -First 1
+                    if ($null -ne $crtDir) {
+                        Copy-Item (Join-Path $crtDir.FullName "*.dll") $appDir -Force
+                    }
+                }
+            }
+        }
+        $missing = @($vcRuntime | Where-Object { -not (Test-Path (Join-Path $appDir $_)) })
+        if ($missing.Count -gt 0) {
+            throw ("missing app-local VC++ runtime after deploy: " + ($missing -join ", ") +
+                   ". Classroom machines are reset, so the executable must not depend on a " +
+                   "system-wide VC++ Redistributable.")
+        }
+        Write-Host ("VC++ runtime is app-local: {0}" -f ($vcRuntime -join ", "))
         Write-Host "Deployed to $appDir"
     }
     $cli = Join-Path $toolsDir "dhw_render_cli.exe"

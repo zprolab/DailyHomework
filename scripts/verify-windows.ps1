@@ -126,6 +126,17 @@ if (-not (Test-Path $exe)) {
     Stop-Check "missing $exe; run scripts\build-windows.ps1 first"
 }
 
+if (-not $Static) {
+    # Classroom machines are restored on reboot: no system-wide VC++ Redistributable.
+    foreach ($dll in @("msvcp140.dll", "vcruntime140.dll", "vcruntime140_1.dll")) {
+        if (-not (Test-Path (Join-Path $appDir $dll))) {
+            Stop-Check ("missing $dll next to DaHoWork.exe; the VC++ runtime must be " +
+                        "app-local for classroom machines that reset on reboot")
+        }
+    }
+    Write-Host "ok: VC++ runtime is app-local"
+}
+
 $dataDir = Join-Path $appDir "data"
 $dataExisted = Test-Path $dataDir
 $tempData = Join-Path $env:TEMP ("DaHoWork-verify-" + [guid]::NewGuid().ToString("N"))

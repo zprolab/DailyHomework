@@ -165,8 +165,11 @@ powershell -ExecutionPolicy Bypass -File scripts\build-windows.ps1 `
 共享套件直接报错）→ 构建 → `ctest` → 用 `dumpbin /dependents` 断言两个 exe 只导入系统 DLL，
 不再执行 `windeployqt`。任何一步不满足都会以非零码退出，不会产出「看起来像单文件」的包。
 
-产物目录可直接整体拷到教室机：`DaHoWork.exe` + Qt DLL + `platforms\qwindows.dll`。
-教室机若没有 VC++ 运行库，`windeployqt` 已经带上 `msvcp140.dll` / `vcruntime140.dll`。
+产物目录可直接整体拷到教室机：`DaHoWork.exe` + Qt DLL + `platforms\qwindows.dll` +
+`msvcp140.dll` / `vcruntime140.dll` / `vcruntime140_1.dll`。**教室机不需要安装 VC++ 运行库**
+（重启还原的机器也适用）：脚本用 `windeployqt --compiler-runtime` 部署，若 Qt 套件的工具集
+与 VS 不一致则从 `VC\Redist\MSVC\...\x64\Microsoft.VC*.CRT` 兜底复制，并在构建末尾硬性
+校验这三个 DLL；`verify-windows.ps1` 也会检查。Windows 10/11 自带 UCRT，无需额外部署 ucrtbase。
 
 ### `-Zip` 发布包结构
 
