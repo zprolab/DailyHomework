@@ -42,6 +42,12 @@ if(DHW_APP_RESOURCE_INCLUDES)
 endif()
 dhw_set_warnings(dhw_app)
 
+# Static Qt has no DLLs and no windeployqt run: the platform (Windows/offscreen) and
+# image-format plugins are static libraries that have to be linked into the exe.
+if(DHW_STATIC_QT)
+    qt_import_plugins(dhw_app INCLUDE_BY_TYPE platforms imageformats)
+endif()
+
 set_target_properties(dhw_app PROPERTIES
     OUTPUT_NAME "DaHoWork"
     MACOSX_BUNDLE OFF
