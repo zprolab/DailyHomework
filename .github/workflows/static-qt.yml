@@ -64,7 +64,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ env.QT_SRC_ROOT }}
-          key: qt-src-${{ inputs.qt_version }}-v1
+          key: qt-src-${{ inputs.qt_version }}-v2
 
       - name: Download Qt source
         if: steps.qtsrc.outputs.cache-hit != 'true'
@@ -99,7 +99,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.QT_PREFIX }}
-          key: qt-static-windows-msvc-${{ inputs.qt_version }}-v1
+          key: qt-static-windows-msvc-${{ inputs.qt_version }}-v2
 
       - name: Configure static Qt (configure-only smoke test)
         if: inputs.mode == 'configure' && steps.qtcache.outputs.cache-hit != 'true'
@@ -115,6 +115,7 @@ jobs:
             "-nomake", "examples", "-nomake", "tests",
             "-submodules", "qtbase",
             "-no-opengl",
+            "-no-icu",
             "--",
             "-DCMAKE_C_COMPILER_LAUNCHER=sccache",
             "-DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
@@ -143,6 +144,7 @@ jobs:
             "-nomake", "examples", "-nomake", "tests",
             "-submodules", "qtbase",
             "-no-opengl",
+            "-no-icu",
             "--",
             "-DCMAKE_C_COMPILER_LAUNCHER=sccache",
             "-DCMAKE_CXX_COMPILER_LAUNCHER=sccache"
@@ -187,7 +189,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: ${{ env.QT_PREFIX }}
-          key: qt-static-windows-msvc-${{ inputs.qt_version }}-v1
+          key: qt-static-windows-msvc-${{ inputs.qt_version }}-v2
 
       - name: Archive static Qt
         if: inputs.mode == 'full'
@@ -246,7 +248,7 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "mode=${{ inputs.mode }} runner=${{ inputs.runner }} qt=${{ inputs.qt_version }}"
-          Write-Host "cache key: qt-static-windows-msvc-${{ inputs.qt_version }}-v1"
+          Write-Host "cache key: qt-static-windows-msvc-${{ inputs.qt_version }}-v2"
           if (Test-Path $env:QT_PREFIX) {
             Write-Host ("static prefix size: {0:N1} MB" -f ((Get-ChildItem $env:QT_PREFIX -Recurse -File | Measure-Object Length -Sum).Sum / 1MB))
           }

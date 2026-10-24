@@ -167,7 +167,7 @@ function Assert-StaticExecutable([string]$exePath, [string]$qtPrefix) {
     Write-Host ("imports: " + ($deps -join ", "))
     # Any Qt DLL or dynamic MSVC/UCRT DLL means the exe is not self-contained.
     $forbidden = @($deps | Where-Object {
-        $_ -match '^(Qt6|VCRUNTIME140|MSVCP140|CONCRT140|ucrtbase|api-ms-win-crt-)'
+        $_ -match '^(Qt6|VCRUNTIME140|MSVCP140|CONCRT140|ucrtbase|api-ms-win-crt-|icuuc|icuin|icudt)'
     })
     if ($forbidden.Count -gt 0) {
         throw ("'$exePath' is NOT self-contained: it still imports " + ($forbidden -join ", ") +
